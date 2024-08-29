@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Code Review Report</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      color: #333;
+    }
+    .code-snippet {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    .file-path {
+      font-weight: bold;
+    }
+    .critical-vulnerability {
+      background-color: #ffdddd;
+      padding: 5px;
+      border-radius: 5px;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Code Review Report</h1>
+
+  <h2>Code Quality</h2>
+  <h3>Readability and Maintainability</h3>
+  <p>The code is generally readable and well-structured. However, there are areas where improvement in naming conventions, comments, and documentation can enhance maintainability.</p>
+
+  <h3>Naming Conventions</h3>
+  <p>Some variables and methods could benefit from more descriptive names. For instance, in the <code>app/controllers/client_organizations_controller.rb</code> file, the variable <code>feature_flags</code> could be renamed to <code>client_organization_feature_flags</code> for better clarity.  </p>
+
+  <h3>Comments and Documentation</h3>
+  <p>While comments are present throughout the codebase, they could be more informative and comprehensive.  In the <code>app/controllers/client_organizations_controller.rb</code> file, the <code>edit_settings</code> and <code>update_settings</code> methods could benefit from a more detailed explanation of their functionality and the associated business logic.</p>
+
+  <p>Consider using inline comments to explain complex logic within methods and functions. In the <code>app/controllers/client_organizations_controller.rb</code> file, within the <code>update_settings</code> method, it would be helpful to add comments explaining the purpose of each loop that iterates through feature flags and limits.</p>   
+
+  <h3>Design Patterns and Coding Standards</h3>
+  <p>The code utilizes several design patterns, including Model-View-Controller (MVC), Active Record, and JSONB data structures.  The implementation generally adheres to Ruby on Rails conventions and coding standards.  </p>     
+
+  <h2>Security</h2>
+  <h3>Hard-Coded Secrets</h3>
+  <p>The provided codebase exhibits a potential security vulnerability related to hard-coded secrets.  In the <code>app/controllers/devise_authy_controller.rb</code> file, API keys for Twilio are directly embedded within the code.  </p>
+
+  <div class="critical-vulnerability">
+    <p><strong>Critical Vulnerability:</strong> Hard-coded secrets should never be directly embedded within source code. This practice exposes sensitive information to unauthorized access. </p>
+  </div>
+
+  <p><strong>Recommendation:</strong> Store sensitive information, such as API keys and passwords, in environment variables or a secure configuration file.  Use the <code>dotenv-rails</code> gem to load environment variables from a <code>.env</code> file during development.  In production, utilize a secure configuration management solution to store and manage secrets.</p>
+
+  <p><strong>File:</strong> <code>repositories/iSoftpull/isoftpull/app/controllers/devise_authy_controller.rb</code></p>
+  <div class="code-snippet">
+    <code>
+      def set_client
+        @client = Twilio::REST::Client.new(ENV['TWILIO_ACCOUNT_SID'], ENV['TWILIO_AUTH_TOKEN'])
+      end
+    </code>
+  </div>
+
+  <h3>Input Validation and Sanitization</h3>
+  <p>The codebase implements input validation and sanitization to a certain extent.  However, some areas could be strengthened to prevent common security risks, such as SQL injection and cross-site scripting (XSS).</p>
+
+  <p><strong>Recommendation:</strong>  Use the <code>sanitize_sql_like</code> method to sanitize user input before using it in SQL queries.  This helps mitigate SQL injection vulnerabilities. In the <code>app/models/applicant.rb</code> file, the <code>ssn</code> attribute is sanitized before being assigned to the <code>ssn</code> column. </p>
+
+  <p><strong>Recommendation:</strong>  Consider using a library like <code>rails-html-sanitizer</code> to sanitize user-supplied HTML content before rendering it on the page. This helps prevent XSS vulnerabilities.</p>
+
+  <p><strong>File:</strong> <code>repositories/iSoftpull/isoftpull/app/models/applicant.rb</code></p>
+  <div class="code-snippet">
+    <code>
+      def ssn=(ssn_num)
+        ssn_num = ssn_num&.strip&.gsub(/[_-]/, '')
+        super(ssn_num)
+      end
+    </code>
+  </div>
+
+  <h3>Insecure Dependencies and Outdated Libraries</h3>
+  <p>The codebase includes dependencies on various gems, including <code>devise</code>, <code>pundit</code>, and <code>activeadmin</code>.  Regularly checking for security vulnerabilities and updates in these dependencies is crucial.</p>
+
+  <p><strong>Recommendation:</strong> Use a dependency management tool, such as <code>bundler</code> and <code>yarn</code>, to manage gem and package dependencies.  Utilize tools like <code>bundler-audit</code>, <code>snyk</code>, and <code>dependabot</code> to scan for vulnerabilities and automatically update dependencies.</p>
+
+  <h3>Secure Coding Practices</h3>
+  <p>The codebase generally follows secure coding practices, such as using parameterized SQL queries and avoiding hard-coded secrets (as mentioned above). However, it's important to continue adhering to secure coding guidelines and best practices, including: </p>
+
+  <ul>
+    <li><strong>Least Privilege:</strong> Grant users and processes only the minimum permissions necessary for their intended tasks.</li>
+    <li><strong>Input Validation:</strong> Rigorously validate user input to prevent malicious data from being processed.</li>
+    <li><strong>Sanitization:</strong>  Sanitize user input to remove potentially harmful characters and escape special characters before rendering content on the page.</li>
+    <li><strong>Secure Logging:</strong>  Avoid logging sensitive information, such as passwords and API keys. </li>
+    <li><strong>Secure Communication:</strong> Implement HTTPS for all communication between clients and the server.</li>
+    <li><strong>Regular Security Updates:</strong>  Keep the application, dependencies, and operating system up to date with the latest security patches.</li>
+  </ul>
+
+  <h2>Best Practices</h2>
+  <h3>Encryption and Secure Communication</h3>
+  <p>The codebase uses <code>Active Record Encryption</code> to protect sensitive information.  In the <code>app/models/applicant.rb</code> file, the <code>ssn</code> attribute is encrypted using a deterministic key.</p>        
+
+  <p><strong>Recommendation:</strong>  Ensure that HTTPS is implemented throughout the application. This encrypts communication between clients and the server, enhancing the security of sensitive data during transmission.</p>   
+
+  <p><strong>File:</strong> <code>repositories/iSoftpull/isoftpull/app/models/applicant.rb</code></p>
+  <div class="code-snippet">
+    <code>
+      encrypts :ssn, deterministic: true
+    </code>
+  </div>
+
+  <h3>Handling Sensitive Information</h3>
+  <p>The codebase handles sensitive information, such as SSN and Date of Birth, securely.  These attributes are validated and sanitized before being stored in the database. The <code>ssn</code> attribute is also encrypted using <code>Active Record Encryption</code>. </p>
+
+  <h3>User Authentication</h3>
+  <p>The codebase leverages the <code>devise</code> gem for user authentication.  It supports two-factor authentication (2FA) using the <code>devise-authy</code> gem.  The implementation appears to follow standard security practices for user authentication.</p>
+
+  <h3>Error Handling</h3>
+  <p>The codebase incorporates error handling mechanisms.  For instance, in the <code>app/controllers/application_controller.rb</code> file, a <code>rescue_from</code> block is used to handle <code>Pundit::NotAuthorizedError</code> exceptions. </p>
+
+  <p><strong>Recommendation:</strong> Consider implementing more robust error logging and reporting, especially in production environments.  Use tools like <code>sentry</code> to track exceptions and provide better insight into unexpected events.</p>
+
+  <p><strong>File:</strong> <code>repositories/iSoftpull/isoftpull/app/controllers/application_controller.rb</code></p>
+  <div class="code-snippet">
+    <code>
+      rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
+    </code>
+  </div>
+
+  <h2>Performance</h2>
+  <h3>Efficiency and Optimization</h3>
+  <p>The codebase generally demonstrates good efficiency.  The use of optimized algorithms and data structures, such as JSONB for storing structured data, contributes to performance.</p>
+
+  <h3>Performance Bottlenecks</h3>
+  <p>While the codebase is generally efficient, certain areas could be reviewed for potential performance bottlenecks.  For example, in the <code>app/helpers/report_logs_helper.rb</code> file, the <code>v2_final_values</code> method includes multiple SQL queries.  Consider using Active Record's eager loading or preloading to reduce the number of database queries in performance-critical sections. </p>
+
+  <p><strong>File:</strong> <code>repositories/iSoftpull/isoftpull/app/helpers/report_logs_helper.rb</code></p>   
+  <div class="code-snippet">
+    <code>
+      def v2_final_values(log)
+        # ... SQL queries ...
+      end
+    </code>
+  </div>
+
+  <p><strong>Recommendation:</strong> Profile the application in production environments to identify performance bottlenecks. Utilize tools like <code>rails-performance</code> to gather insights into query performance and identify areas for optimization.</p>
+
+  <p><strong>Recommendation:</strong> Consider caching frequently accessed data, such as credit report data, to reduce database load and improve response times.  Employ caching mechanisms like <code>Rails.cache</code> or <code>Redis</code> for effective data caching.</p>
+
+  <p><strong>Recommendation:</strong>  Optimize database queries by using appropriate indexing strategies.  Use the <code>EXPLAIN</code> command in PostgreSQL to analyze query plans and identify areas for improvement. </p>      
+
+  <h2>Summary</h2>
+  <p>The codebase exhibits good overall code quality and follows secure coding practices.  However, addressing hard-coded secrets and enhancing input validation and sanitization is crucial.  Additionally, incorporating more robust error handling and profiling for performance optimization are recommended best practices. </p>
+</body>
+</html>

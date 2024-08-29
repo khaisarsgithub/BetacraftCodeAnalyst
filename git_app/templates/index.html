@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ username }}'s GitHub Repositories</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .repo {
+            border: 1px solid #ddd;
+            background-color: #fff;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .repo h2 {
+            margin: 0 0 10px;
+            font-size: 1.75em;
+            color: #007bff;
+        }
+        .repo p {
+            margin: 5px 0;
+            color: #555;
+        }
+        .repo p strong {
+            color: #333;
+        }
+        .divider {
+            margin: 20px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 24px;
+            height: 24px;
+            animation: spin 2s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        form button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        form button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        function analyzeRepo(username, repoUrl, repoName, button) {
+            const loader = button.nextElementSibling;
+            button.disabled = true;
+            loader.style.display = 'inline-block';
+
+            fetch("{% url 'analyze_complete_repo' %}?username=" + username + "&repo_url=" + encodeURIComponent(repoUrl) + "&repo_name=" + encodeURIComponent(repoName), {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Check your Inbox for Detailed Report")
+                } else {
+                    throw new Error('Failed to analyze the repository');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while analyzing the repository.');
+            })
+            .finally(() => {
+                button.disabled = false;
+                loader.style.display = 'none';
+            });
+        }
+
+        function scheduleCronJob(username, repoUrl, repoName, button) {
+            const loader = button.nextElementSibling;
+            button.disabled = true;
+            loader.style.display = 'inline-block';
+
+            fetch("{% url 'analyze_complete_repo' %}?username=" + username + "&repo_url=" + encodeURIComponent(repoUrl) + "&repo_name=" + encodeURIComponent(repoName), {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log(response)
+                    alert("Cron Job Scheduled Successfully, At the End of Week you will get Last Sprint Report.")
+                } else {
+                    throw new Error('Failed to analyze the repository');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while Scheduling CronJob.');
+            })
+            .finally(() => {
+                button.disabled = false;
+                loader.style.display = 'none';
+            });
+        }
+    </script>
+</head>
+<body>
+    {% if repositories is not None %}
+        <h1>Welcome, {{ username }}!</h1>
+        <h1>{{ username }}'s GitHub Repositories</h1>
+        {% for repo in repositories %}
+            <div class="repo">
+                <h2>{{ repo.name }}</h2>
+                <p>{{ repo.description }}</p>
+                <p><strong>Language:</strong> {{ repo.language }}</p>
+                <p><strong>Stars:</strong> {{ repo.stars }}</p>
+                <p><strong>Forks:</strong> {{ repo.forks }}</p>
+                <p><strong>Watchers:</strong> {{ repo.watchers }}</p>
+                <p><strong>Open Issues:</strong> {{ repo.open_issues }}</p>
+                <p><strong>Pull Requests:</strong> {{ repo.pull_requests }}</p>
+                <p><strong>Commits:</strong> {{ repo.commits }}</p>
+                <button class="analyze-button" onclick="analyzeRepo('{{ username }}', '{{ repo.url }}', '{{ repo.name }}', this)">Analyze Repo</button>
+                <button class="cronjob-button" onclick="analyzeRepo('{{ username }}', '{{ repo.url }}', '{{ repo.name }}', this)">Get Weekly Report</button>
+                <div class="loader"></div>
+            </div>
+            <div class="divider"></div>
+        {% endfor %}
+    {% else %}
+        <h1>Please Log In</h1>
+        <form method="post" action="">
+            {% csrf_token %}
+            {{ login_form.as_p }}
+            <button type="submit">Log In</button>
+        </form>
+    {% endif %}
+</body>
+</html>
