@@ -13,7 +13,7 @@ class Report(models.Model):
         ('Weekly', 'Weekly'),
         ('Bi-Weekly', 'Bi-Weekly')
     ]
-
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     emails = models.TextField(help_text="Comma-separated list of emails")
     repository_url = models.URLField(max_length=255)
@@ -21,6 +21,7 @@ class Report(models.Model):
     prompt = models.TextField()
     active = models.BooleanField(default=True)
     frequency = models.CharField(max_length=10, choices=FREQUENCY_CHOICES)
+    output = models.TextField(default="")
     project = models.ForeignKey(Project, related_name='reports', on_delete=models.CASCADE)
 
     def __str__(self):

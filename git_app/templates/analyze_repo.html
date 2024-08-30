@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyze Repository</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Analyze Repository</h1>
+    <form id="analyzeForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br><br>
+        
+        <label for="contributor">Contributor:</label>
+        <input type="text" id="contributor" name="contributor" required><br><br>
+        
+        <label for="repo_name">Repository Name:</label>
+        <input type="text" id="repo_name" name="repo_name" required><br><br>
+        
+        <label for="token">Token:</label>
+        <input type="text" id="token" name="token" required><br><br>
+        
+        <label for="emails">Emails (comma-separated):</label>
+        <input type="text" id="emails" name="emails" required><br><br>
+        
+        <input type="submit" value="Analyze">
+    </form>
+
+    <div id="loader" class="loader"></div>
+    <div id="response"></div>
+
+    <script>
+        $(document).ready(function() {
+            $('#analyzeForm').submit(function(e) {
+                e.preventDefault();
+                $('#loader').show();
+                $('#response').html('');
+                $.ajax({
+                    url: '/analyze_complete_repo',
+                    type: 'GET',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#loader').hide();
+                        alert("Check your Inbox for Detailed Report")
+                        // $('#response').html(response);
+                    },
+                    error: function(xhr, status, error) {
+                        $('#loader').hide();
+                        alert("Something Went Wrong")
+                        // $('#response').html('Error: ' + xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

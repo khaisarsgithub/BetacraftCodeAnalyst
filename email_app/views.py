@@ -32,12 +32,12 @@ def send_brevo_mail(subject, html_content, emails):
     # subject = "My Subject"
     # html_content = "<html><body><h1>This is my first transactional email </h1></body></html>"
     if isinstance(emails, str):
-        emails = [email.strip() for email in emails.split(',')]
+        emails = [{"email":email.strip(), "name":email.split("@")[0]} for email in emails.split(',')]
+    print(f"Number of emails: {len(emails)}")
     
     # # Create a list of dictionaries for the 'to' parameter
     # to = [{"email": email, "name": email.split("@")[0]} for email in emails]
-
-    # to = [{"email":"ameya.vaidya@sorigin.com", "name":"Ameya Vaidya"}]
+    to = emails
     cc = [{"email":"mdkhaisars118@gmail.com", "name":"Mohammed Khaisar"}]
     # bcc = [{}]
     # reply_to = {}
@@ -45,7 +45,7 @@ def send_brevo_mail(subject, html_content, emails):
     headers = {"Some-Custom-Name":"unique-id-1"}
     params = {"parameter":"My param value","subject":"New Subject"}
     # for email in emails:
-    to = {"email":emails, "name":"Ameya Vaidya"}
+    # to = [{"email":email, "name":email.split("@")[0]}]
     print(f"To: {to}")
     try:
         send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(to=to, cc=cc, headers=headers, html_content=html_content, sender=sender, subject=subject)
@@ -54,7 +54,7 @@ def send_brevo_mail(subject, html_content, emails):
         return True, "Email sent successfully"
     except Exception as e:
         print(f"Unexpected error when sending email: {e}")
-        return False, "An unexpected error occurred while sending the email"
+        return False, f"An unexpected error occurred while sending the email {e}"
 
 # Create your views here.
 def send_email(subject, body, to_email):
@@ -90,15 +90,9 @@ def weekly_job(repo_name, report, email):
     
     # Analyze the repository
     
-    try:
-        send_brevo_mail(subject=f"{repo_name} : {str(last_week)[:10]} - {str(today)[:10]}", 
-            html_content=report, 
-            to=emails)
-    except Exception as e:
-        print(f"Error sending email: {e}")
-        exit(1)
+
     # Schedule the job to run every week
-    schedule.every(1).minute.do(send_brevo_mail, 
+    schedule.every().friday.at("18:00").do(send_brevo_mail, 
                         subject=f"{repo_name} : {str(last_week)[:10]} - {str(today)[:10]}", 
                         html_content=report, 
                         to=email)
@@ -108,13 +102,9 @@ def weekly_job(repo_name, report, email):
     scheduler_thread.start()
     print("Job Scheduled Successfully")
     
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(60*60*24*7)
-    #     print(f"Email sent to {email}")
     
 def run_scheduler():
     while True:
         schedule.run_pending()
-        time.sleep(60)
-        print(f"Email sent to Successfully")
+        time.sleep(60*60*24*7)
+        print(f"Email sent Successfully")

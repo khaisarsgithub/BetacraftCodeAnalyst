@@ -77,12 +77,20 @@
         }
     </style>
     <script>
-        function analyzeRepo(username, repoUrl, repoName, button) {
+        function analyzeRepo(username, repoUrl, repoName, token, button) {
             const loader = button.nextElementSibling;
             button.disabled = true;
             loader.style.display = 'inline-block';
+            const emails = prompt("Please enter email addresses separated by commas:");
+            if (!emails) {
+                alert("Email addresses are required.");
+                button.disabled = false;
+                loader.style.display = 'none';
+                return;
+            }
 
-            fetch("{% url 'analyze_complete_repo' %}?username=" + username + "&repo_url=" + encodeURIComponent(repoUrl) + "&repo_name=" + encodeURIComponent(repoName), {
+            fetch("{% url 'analyze_complete_repo' %}?username=" + username + "&repo_url=" + encodeURIComponent(repoUrl) + "&repo_name=" + encodeURIComponent(repoName)
+            + "&token=" + encodeURIComponent(token) + "&emails=" + encodeURIComponent(emails), {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -98,6 +106,8 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('An error occurred while analyzing the repository.');
+                button.disabled = false;
+                loader.style.display = 'none';
             })
             .finally(() => {
                 button.disabled = false;
@@ -105,12 +115,21 @@
             });
         }
 
-        function scheduleCronJob(username, repoUrl, repoName, button) {
+        function scheduleCronJob(username, repoUrl, repoName, token, button) {
             const loader = button.nextElementSibling;
             button.disabled = true;
             loader.style.display = 'inline-block';
 
-            fetch("{% url 'analyze_complete_repo' %}?username=" + username + "&repo_url=" + encodeURIComponent(repoUrl) + "&repo_name=" + encodeURIComponent(repoName), {
+            const emails = prompt("Please enter email addresses separated by commas:");
+            if (!emails) {
+                alert("Email addresses are required.");
+                button.disabled = false;
+                loader.style.display = 'none';
+                return;
+            }
+
+            fetch("{% url 'get_weekly_report' %}?username=" + username + "&repo_url=" + encodeURIComponent(repoUrl) + "&repo_name=" + encodeURIComponent(repoName)
+            + "&token=" + encodeURIComponent(token) + "&emails=" + encodeURIComponent(emails), {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -127,6 +146,8 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('An error occurred while Scheduling CronJob.');
+                button.disabled = false;
+                loader.style.display = 'none';
             })
             .finally(() => {
                 button.disabled = false;
@@ -139,6 +160,9 @@
     {% if repositories is not None %}
         <h1>Welcome, {{ username }}!</h1>
         <h1>{{ username }}'s GitHub Repositories</h1>
+
+        <a href="{% url 'analyze_repo_page' %}" class="analyze-button">Analyze Custom Repo</a>
+        <div class="divider"></div>
         {% for repo in repositories %}
             <div class="repo">
                 <h2>{{ repo.name }}</h2>
@@ -150,8 +174,8 @@
                 <p><strong>Open Issues:</strong> {{ repo.open_issues }}</p>
                 <p><strong>Pull Requests:</strong> {{ repo.pull_requests }}</p>
                 <p><strong>Commits:</strong> {{ repo.commits }}</p>
-                <button class="analyze-button" onclick="analyzeRepo('{{ username }}', '{{ repo.url }}', '{{ repo.name }}', this)">Analyze Repo</button>
-                <button class="cronjob-button" onclick="analyzeRepo('{{ username }}', '{{ repo.url }}', '{{ repo.name }}', this)">Get Weekly Report</button>
+                <button class="analyze-button" onclick="analyzeRepo('{{ username }}', '{{ repo.url }}', '{{ repo.name }}', '{{ token }}', this)">Analyze Repo</button>
+                <button class="cronjob-button" onclick="scheduleCronJob('{{ username }}', '{{ repo.url }}', '{{ repo.name }}', '{{ token }}', this)">Get Weekly Report</button>
                 <div class="loader"></div>
             </div>
             <div class="divider"></div>

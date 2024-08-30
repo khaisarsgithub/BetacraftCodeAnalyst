@@ -31,6 +31,8 @@ from genai.views import manage_prompt_size, llm
 from .prompts import base_prompt
 from email_app.views import send_email, weekly_job, send_brevo_mail
 
+from .models import Project, Report
+
 load_dotenv()
 
 GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID')
@@ -45,6 +47,11 @@ encoder = SentenceTransformer("all-mpnet-base-v2")
 # Create your views here.
 def index(request):
     return redirect('github/login')
+
+def analyze_repo_page(request):
+    return render(request, 'analyze_repo.html')
+
+
 
 # Weekly Report View
 def get_weekly_report(request):
@@ -62,9 +69,6 @@ def get_weekly_report(request):
         'emails': emails
     }
     
-    if not username or not repo_name:
-        raise ValueError("Username and repository name are required")
-    
     repo_url = f"https://{contributor}:{token}@github.com/{username}/{repo_name}.git" if token else f"https://github.com/{username}/{repo_name}.git"
     logger.info(f"Analyzing repo: {repo_url}")
     
@@ -72,18 +76,47 @@ def get_weekly_report(request):
     clone_repo_and_get_commits(repo_url, dest_folder)
     traverse_and_copy(dest_folder, 'weekly.txt')
     report = analyze_repo(params, 'weekly.txt')
+
+    # Store repo_name in project table
+    project, created = Project.objects.get_or_create(
+        name=repo_name,
+        defaults={'owner': username}
+    )
+    # Create a new Report instance
+    report = Report.objects.create(
+        name=f"Weekly Report for {repo_name}",
+        emails=emails,
+        repository_url=f"https://github.com/{username}/{repo_name}",
+        repository_token=token,
+        prompt=base_prompt,
+        active=True,
+        frequency='Weekly',
+        project=project,
+        output=report
+    )
+    print(f"New report created for project '{repo_name}': {report}")
+
+    if created:
+        print(f"New project '{repo_name}' created for user '{username}'")
+    else:
+        print(f"Project '{repo_name}' already exists for user '{username}'")
+    
+    if not username or not repo_name:
+        raise ValueError("Username and repository name are required")
     # Send Email
     try:
         today = datetime.date.today()
         last_week = today - datetime.timedelta(weeks=1)
         
+        
         if emails is not None:
             send_brevo_mail(subject=f"{repo_name} : {str(last_week)[:10]} - {str(today)[:10]}", 
                 html_content=report, 
                 emails=emails)
+            weekly_job(repo_name, report, emails)
         else:
             print("Emails not provided")
-                
+        
     except Exception as e:
         print(f"Error sending email: {e}")
         exit(1)
@@ -218,8 +251,8 @@ def clone_repo_and_get_commits(repo_url, dest_folder):
     print(f"Initializing Repo : {dest_folder}")
     repo = git.Repo(dest_folder)
 
-    # Get the commits from the last two weeks
-    last_week = datetime.datetime.now() - datetime.timedelta(weeks=2)
+    # Get the commits from the last week
+    last_week = datetime.datetime.now() - datetime.timedelta(weeks=1)
     commits = list(repo.iter_commits(since=last_week.isoformat()))
 
     # Print the commit details
@@ -228,7 +261,6 @@ def clone_repo_and_get_commits(repo_url, dest_folder):
         content = "<h2>No commits found in the last week</h2>"
     else:
         content = commit_diff(commits)
-        # print(f"Content: {content}")
     return content
 
 
@@ -401,6 +433,7 @@ def github_callback(request):
             user_data = response.json()
             print(f"User Data: {user_data}")
             github_username = user_data['login']
+            print(f"Github Data: {user_data}")
 
             # Optionally, you can create a Django user or use an existing one
             user, _ = User.objects.get_or_create(username=github_username)
@@ -416,7 +449,9 @@ def github_callback(request):
             git_repositories = get_github_repos(github_username, token['access_token'])
             print(f"Repositories : {git_repositories}")
 
-            return render(request, 'index.html', {'repositories':git_repositories, 'username':github_username})
+            return render(request, 'index.html', {'repositories':git_repositories, 
+                                                  'username':github_username, 
+                                                  'token': token['access_token']})
 
         else:
             return handle_error("Failed to retrieve GitHub user information")
