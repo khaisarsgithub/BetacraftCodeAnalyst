@@ -1,12 +1,11 @@
 version: 1.0
 runtime: python3
 build:
-  - python -m venv /path/to/new/virtual/environment
-  - cd /path/to/new/virtual/environment
-  - Scripts\activate
-  - pip install -r requirements.txt
+  commands:
+    build:
+      - pip install -r requirements.txt 
 run:
   runtime-version: 3.8.16
   command: sh startup.sh
   network:
-    port: 8080
+    port: 8000
