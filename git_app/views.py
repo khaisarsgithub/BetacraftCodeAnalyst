@@ -81,7 +81,7 @@ def get_weekly_report(request):
     project, created = Project.objects.get_or_create(
         name=repo_name,
         defaults={'owner': username}
-    )
+    ).save()
     # Create a new Report instance
     report = Report.objects.create(
         name=f"Weekly Report for {repo_name}",
@@ -93,7 +93,7 @@ def get_weekly_report(request):
         frequency='Weekly',
         project=project,
         output=report
-    )
+    ).save()
     print(f"New report created for project '{repo_name}': {report}")
 
     if created:
@@ -148,7 +148,22 @@ def analyze_complete_repo(request):
     clone_repository(repo_url, dest_folder)
     traverse_and_copy(dest_folder, 'entire_repo.txt')
     report = analyze_repo(params, 'entire_repo.txt')
-
+    project, created = Project.objects.get_or_create(
+        name=repo_name,
+        defaults={'owner': username}
+    ).save()
+    # Create a new Report instance
+    report = Report.objects.create(
+        name=f"Weekly Report for {repo_name}",
+        emails=emails,
+        repository_url=f"https://github.com/{username}/{repo_name}",
+        repository_token=token,
+        prompt=base_prompt,
+        active=True,
+        frequency='Weekly',
+        project=project,
+        output=report
+    ).save()
 
     # Send Email
     try:
