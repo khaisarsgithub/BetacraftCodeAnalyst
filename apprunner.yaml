@@ -1,12 +1,16 @@
 version: 1.0
-runtime: python3
 
+# Build settings
 build:
   commands:
-    build: 
-      - pip install -r requirements.txt
-run:
-  runtime-version: 3.8.16
+    - pip install -r requirements.txt
+
+# Runtime settings
+runtime:
+  type: Python
+  version: 3.8
+
+# Command to start the application
+start:
   command: sh startup.sh
-  network:
-    port:8080
+  port: 8080
