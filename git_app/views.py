@@ -68,7 +68,8 @@ def get_weekly_report(request):
         'token': token,
         'emails': emails
     }
-    
+
+    # Generating Repo URL    
     repo_url = f"https://{contributor}:{token}@github.com/{username}/{repo_name}.git" if token else f"https://github.com/{username}/{repo_name}.git"
     logger.info(f"Analyzing repo: {repo_url}")
     
