@@ -1,11 +1,33 @@
 version: 1.0
-runtime: python3
+runtime: python3.11
+
+source:
+  type: git
+  repository: 
+    url: https://github.com/khaisarsgithub/BetaAnalaysis
+    branch: Main
+
 build:
   commands:
+    install:
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
     build:
-      - pip install -r requirements.txt 
+      - python manage.py collectstatic --noinput
+
 run:
-  runtime-version: 3.11.9
-  command: sh startup.sh
-  network:
-    port: 8080
+  command: python manage.py runserver 0.0.0.0:8000 --cert 'cert.crt'
+
+instance_configuration:
+  cpu: 1024
+  memory: 2048
+
+network_configuration:
+  ingress_configuration:
+    is_publicly_accessible: true
+
+service:
+  name: BetacraftCodeAnalyst
+  health_check:
+    path: /healthz
+
