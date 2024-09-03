@@ -137,9 +137,12 @@ def analyze_complete_repo(request):
         'token': token,
         'emails': emails
     }
-    
-    if not username or not repo_name:
-        raise ValueError("Username and repository name are required")
+    try:
+        if not username or not repo_name:
+            raise ValueError("Username and repository name are required")
+    except ValueError as e:
+        print(f"Error: {e}")
+        return HttpResponse(f"Error: {e}", status=400)
     
     repo_url = f"https://{contributor}:{token}@github.com/{username}/{repo_name}.git" if token else f"https://github.com/{username}/{repo_name}.git"
     logger.info(f"Analyzing repo: {repo_url}")
@@ -148,12 +151,15 @@ def analyze_complete_repo(request):
     clone_repository(repo_url, dest_folder)
     traverse_and_copy(dest_folder, 'entire_repo.txt')
     report = analyze_repo(params, 'entire_repo.txt')
-    project, created = Project.objects.get_or_create(
+
+    
+    try:
+        project, created = Project.objects.get_or_create(
         name=repo_name,
         defaults={'owner': username}
-    ).save()
+        ).save()
     # Create a new Report instance
-    report = Report.objects.create(
+        report = Report.objects.create(
         name=f"Weekly Report for {repo_name}",
         emails=emails,
         repository_url=f"https://github.com/{username}/{repo_name}",
@@ -163,7 +169,9 @@ def analyze_complete_repo(request):
         frequency='Weekly',
         project=project,
         output=report
-    ).save()
+        ).save()
+    except Exception as e:
+        print(f"Error creating project or report: {e}")
 
     # Send Email
     try:
@@ -191,17 +199,6 @@ def analyze_repo(params, output_file):
         contributor = params['contributor']
         token = params['token']
         emails = params['emails']
-        
-        # if not username or not repo_name:
-        #     raise ValueError("Username and repository name are required")
-        
-        # repo_url = f"https://{contributor}:{token}@github.com/{username}/{repo_name}.git" if token else f"https://github.com/{username}/{repo_name}.git"
-        # logger.info(f"Analyzing repo: {repo_url}")
-
-        # dest_folder = f"repositories/{username}/{repo_name}"
-        # clone_repository(repo_url, dest_folder)
-        # traverse_and_copy(dest_folder, 'output.txt')
-
 
         # Checkpoint Here
         data = load_data(output_file)
@@ -240,7 +237,7 @@ def analyze_repo(params, output_file):
             response = llm.generate_content(prompt)
             report = response.text
             print(f"Output: {llm.count_tokens(response.text)}")
-            print(response.text)
+            print("Response generated successfully")
             responses.append(response.text)
         # if len(responses) > 1:
         return response.text
