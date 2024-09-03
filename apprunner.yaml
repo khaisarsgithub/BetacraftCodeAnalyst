@@ -29,7 +29,7 @@ network_configuration:
     is_publicly_accessible: true
 
 service:
-  name: BetacraftCodeAnalyst
+  name: BetaAnalysis
   health_check:
     path: /healthz
 
