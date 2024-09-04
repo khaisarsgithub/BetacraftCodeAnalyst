@@ -18,7 +18,7 @@ build:
       - python manage.py migrate
 
 run:
-  command: python manage.py runserver 0.0.0.0:8000 --cert 'cert.crt'
+  command: gunicorn BetacraftCodeAnalyst.wsgi:application --bind 0.0.0.0:8000
 
 instance_configuration:
   cpu: 1024
@@ -32,4 +32,3 @@ service:
   name: BetaAnalysis
   health_check:
     path: /healthz
-
