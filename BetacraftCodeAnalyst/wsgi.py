@@ -8,10 +8,19 @@ https://docs.djangoproject.com/en/5.0/howto/deployment/wsgi/
 """
 
 import os
+import sys
 from django.core.wsgi import get_wsgi_application
 from whitenoise import WhiteNoise
+import django
+
+
+django.setup()
+# Add your project directory to the Python path
+project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project_path)
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'BetacraftCodeAnalyst.settings')
+
 
 application = get_wsgi_application()
 application = WhiteNoise(application)

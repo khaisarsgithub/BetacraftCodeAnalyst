@@ -26,11 +26,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--@83p*)%2u@m50f&u=51evsy544=mirweoe3cghz!wgzk22o@y'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = [ '*' ]
 # ALLOWED_HOSTS = [".awsapprunner.com"]
 
@@ -113,8 +112,8 @@ WSGI_APPLICATION = 'BetacraftCodeAnalyst.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 # Check if we're running in production or development
-if os.environ.get('DJANGO_ENV') == 'production':
-    # Production Enviroment
+if DEBUG:
+    # Development Enviroment
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -122,6 +121,7 @@ if os.environ.get('DJANGO_ENV') == 'production':
         }
     }
 else:
+    # Production Enviroment
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -135,11 +135,10 @@ else:
     }
 
 # Ensure all required environment variables are set for production
-if os.environ.get('DJANGO_ENV') == 'production':
-    if not all([os.environ.get('DB_NAME'), os.environ.get('DB_USER'), 
-                os.environ.get('DB_PASSWORD'), os.environ.get('DB_HOST'), 
-                os.environ.get('DB_PORT')]):
-        raise ImproperlyConfigured("Database configuration environment variables are not set properly for production.")
+if not all([os.environ.get('DB_NAME'), os.environ.get('DB_USER'), 
+            os.environ.get('DB_PASSWORD'), os.environ.get('DB_HOST'), 
+            os.environ.get('DB_PORT')]):
+    raise ImproperlyConfigured("Database configuration environment variables are not set properly for production.")
 
 
 # Password validation
