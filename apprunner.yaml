@@ -1,5 +1,5 @@
 version: 1.0
-runtime: python3.11
+runtime: python311
 
 source:
   type: git
@@ -9,13 +9,54 @@ source:
 
 build:
   commands:
+    pre-run:
+    - uname -a  # OS and kernel version.
+    - lsb_release -a # Linux distribution
+
     install:
-      - pip install --upgrade pip
-      - pip install -r requirements.txt
+      - sudo apt install -y python3 python3-pip virtualenv 
+      - source venv/bin/activate
+      - pip3 install -r requirements.txt
       
     build:
-      - python manage.py collectstatic --noinput
-      - python manage.py migrate
+      # Install the required dependencies using pip
+      - pip3 install -r requirements.txt
+
+    post-build:
+      # Collect static files and run database migrations
+      - python3 manage.py collectstatic --noinput
+      - python3 manage.py migrate
+
+    env:
+    # Set environment variables
+    - name: EMAIL_ADDRESS
+      value: "mdkhaisars118@gmail.com"
+    - name: EMAIL_PASSWORD
+      value: "caenzmmyohlvexau"
+    - name: GEMINI_API_KEY
+      value: "AIzaSyD03Le05r5qjtUU3X6osXsruuDYJ7jahHw"
+    - name: EMAIL_SERVER
+      value: "smtp.gmail.com"
+    - name: GITHUB_CLIENT_ID
+      value: "Ov23liUJfKAnqRctefnJ"
+    - name: GITHUB_CLIENT_SECRET
+      value: "ff4dd825793cdea9f1b43bf8c805104b58f66a8d"
+    - name: BREVO_API_KEY
+      value: "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"
+    - name: DB_NAME
+      value: "betacraft"
+    - name: DB_USER
+      value: "postgres"
+    - name: DB_PASSWORD
+      value: "Khaisar118@Postgres"
+    - name: DB_HOST
+      value: "localhost"
+    - name: DB_PORT
+      value: "5432"
+    - name: SECRET_KEY
+      value: "django-insecure--@83p*)%2u@m50f&u=51evsy544=mirweoe3cghz!wgzk22o@y"
+    - name: DJANGO_SETTINGS_MODULE
+      value: "BetacraftCodeAnalyst.settings"
 
 run:
   command: gunicorn BetacraftCodeAnalyst.wsgi:application --bind 0.0.0.0:8000
@@ -32,3 +73,5 @@ service:
   name: BetaAnalysis
   health_check:
     path: /healthz
+
+    
